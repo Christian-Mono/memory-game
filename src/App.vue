@@ -71,14 +71,31 @@ export default defineComponent({
       })
     }
 
-    for (let i = 0; i < 16; i++) {
+    const cardItems = [1, 2, 3, 4, 5, 6, 7, 8];
+
+    cardItems.forEach(item => {
       cardList.value.push({
-        value: i,
-        visible: false,
-        position: i,
+        value: item,
+        visible: true,
+        position: null,
         matched: false
       })
-    }
+
+      cardList.value.push({
+        value: item,
+        visible: true,
+        position: null,
+        matched: false
+      })
+
+    })
+
+    cardList.value = cardList.value.map((card, index) => {
+      return {
+        ...card,
+        position: index
+      }
+    })
 
     const flipCard = (payload: Payload) => {
       cardList.value[payload.position].visible = true
@@ -95,15 +112,15 @@ export default defineComponent({
         const secondPick = currentValue[1];
 
         if (firstPick.cardValue === secondPick.cardValue) {
-          status.value = 'Matched';
 
           cardList.value[firstPick.position].matched = true;
           cardList.value[secondPick.position].matched = true;
         } else {
-          status.value = 'Mismatch';
+          setTimeout(() => {
 
-          cardList.value[firstPick.position].visible = false;
-          cardList.value[secondPick.position].visible = false;
+            cardList.value[firstPick.position].visible = false;
+            cardList.value[secondPick.position].visible = false;
+          }, 2000);
         }
         movesCounter.value++;
         userPick.value.length = 0

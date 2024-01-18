@@ -2,7 +2,7 @@
     <div class="card" @click="selectCard">
         <!-- front of the card -->
         <div v-if="visible" class="card-face is-visible">
-            {{ value }} - {{ matched }}
+            {{ value }} - {{ position }}
         </div>
         <!-- back of the card -->
         <div v-else class="card-face is-hidden">
