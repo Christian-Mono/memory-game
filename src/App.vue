@@ -2,18 +2,19 @@
 <template>
   <div class="app bg-[url('../public/img/geometry2.png')] container">
     <h1 class="py-4 text-4xl font-normal text-center"> Matching Game </h1>
-    <div class="flex items-center justify-center gap-8 py-2">
+    <!-- <div class="flex items-center justify-center gap-8 py-2">
       <ul class="flex gap-1">
         <li>#</li>
         <li>#</li>
         <li>#</li>
       </ul>
-      <p>Time</p>
+      <p>{{ timeElapsed }}</p>
       <p> No.Moves: {{ movesCounter }} </p>
       <button @click="restartGame">
         <img src="../public/img/restart.svg" alt="restart-icon">
       </button>
-    </div>
+    </div> -->
+    <ScorePanel :restartGame="restartGame" />
     <!--<h2>{{ status }}</h2> TRIGGERS when i win, i will use to change page -->
     <section class="grid w-3/6 grid-cols-4 gap-6 p-10 mx-auto rounded-lg bg-gradient-to-br from-teal-300 to-violet-400 ">
       <Card v-for="(card, index) in cardList" :key="`card-${index}`" :matched="card.matched" :value="card.value"
@@ -25,15 +26,17 @@
 </template>
 
 <script script lang="ts">
-import { defineComponent, ref, watch, computed } from 'vue'
+import { defineComponent, ref, watch, computed, provide } from 'vue'
 import _ from 'lodash';
 import Card from './components/Card.vue';
+import ScorePanel from './components/ScorePanel.vue'
+
 
 
 interface Card {
   value: string;
   visible: boolean;
-  position: any;
+  position: number;
   matched: boolean;
 }
 interface Payload {
@@ -45,18 +48,20 @@ export default defineComponent({
   name: 'App',
   components: {
     Card,
-  }, setup() {
+    ScorePanel
+  },
+  setup() {
     const cardList = ref<Card[]>([]) //type card and all his values
     const userPick = ref<Payload[]>([])
     const movesCounter = ref<number>(0)
+    const timeElapsed = ref<number>(0)
     const status = computed(() => {
       //win condition
       if (remainingPicks.value === 0) {
         return "You won"
       }
-      return ""; // Aggiungi un valore di ritorno predefinito
+      return "";
     })
-
     const remainingPicks = computed(() => {
       const remainingCards = cardList.value.filter(
         card => card.matched === false).length
@@ -71,31 +76,31 @@ export default defineComponent({
     const restartGame = () => {
       shuffleCards();
       movesCounter.value = 0;
-
       cardList.value = cardList.value.map((card, index) => {
         return {
           ...card,
           matched: false,
           position: index,
           visible: false,
+
         }
       })
     }
 
     const cardItems = ['globe', 'binoculars', 'moon', 'astronaut', 'shuttle', 'antenna', 'satellite', 'meteor'];
 
-    cardItems.forEach(item => {
+    cardItems.forEach((item, index) => {
       cardList.value.push({
         value: item,
         visible: false,
-        position: null,
+        position: index,
         matched: false
       })
 
       cardList.value.push({
         value: item,
         visible: false,
-        position: null,
+        position: index,
         matched: false
       })
 
@@ -142,7 +147,9 @@ export default defineComponent({
         movesCounter.value++;
         userPick.value.length = 0
       }
+
     }, { deep: true })
+    provide('movesCounter', movesCounter)
 
     return {
       cardList,
@@ -151,7 +158,8 @@ export default defineComponent({
       status,
       movesCounter,
       shuffleCards,
-      restartGame
+      restartGame,
+      timeElapsed
     }
   }
 })
