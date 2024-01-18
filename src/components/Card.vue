@@ -1,14 +1,19 @@
 <template>
-    <div class="card" @click="selectCard">
+    <button class="relative w-32 h-32" @click="selectCard">
         <!-- front of the card -->
-        <div v-if="visible" class="card-face is-visible">
-            {{ value }} - {{ position }}
+
+        <div v-if="visible" class="relative h-full rounded-lg absolutew-full bg-cyan-500 is-visible">
+            <img class="absolute w-1/2 mx-8 my-8 h-1/2" :src="`/img/${value}.svg`" :alt="value">
+            <!-- if matches -->
+            <div v-if="matched" class="absolute top-0 left-0 right-0 w-full h-full bg-green-300 rounded-lg "> <img
+                    class="w-1/2 mx-8 my-8 h-1/2 " :src="`/img/${value}.svg`" :alt="value">
+            </div>
         </div>
         <!-- back of the card -->
-        <div v-else class="card-face is-hidden">
-            Back
+        <div v-else class="w-full h-full bg-gray-800 rounded-lg is-hidden">
+
         </div>
-    </div>
+    </button>
 </template>
 
 <script script lang="ts">
@@ -23,7 +28,7 @@ export default {
             required: true
         },
         value: {
-            type: Number,
+            type: String,
             required: true,
         },
         visible: {
@@ -45,27 +50,4 @@ export default {
 }
 </script>
 
-<style>
-.card {
-    position: relative;
-    border: 5px solid #ccc;
-    text-align: center;
-
-}
-
-.card-face {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-}
-
-.card-face.is-visible {
-    background-color: red;
-    color: white;
-}
-
-.card-face.is-hidden {
-    background-color: blue;
-    color: black;
-}
-</style>
+<style></style>
