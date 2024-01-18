@@ -8,14 +8,16 @@
     <Card v-for="(card, index) in cardList" :key="`card-${index}`" :matched="card.matched" :value="card.value"
       :visible="card.visible" :position="card.position" @select-card="flipCard" />
     <!-- when @select-card (emmit) is called then it starts the flipCard function -->
-
   </section>
+  <button @click="restartGame">Restart game</button>
 </template>
 
 <script script lang="ts">
 import { defineComponent, ref, watch, computed } from 'vue'
+import _ from 'lodash';
 import ScorePannel from './components/ScorePannel.vue';
 import Card from './components/Card.vue';
+
 
 interface Card {
   value: number;
@@ -52,9 +54,26 @@ export default defineComponent({
       return remainingCards / 2
     })
 
+    const shuffleCards = () => {
+      cardList.value = _.shuffle(cardList.value);
+    }
+
+    const restartGame = () => {
+      shuffleCards()
+
+      cardList.value = cardList.value.map((card, index) => {
+        return {
+          ...card,
+          matched: false,
+          position: index,
+          visible: false,
+        }
+      })
+    }
+
     for (let i = 0; i < 16; i++) {
       cardList.value.push({
-        value: 10,
+        value: i,
         visible: false,
         position: i,
         matched: false
@@ -97,6 +116,8 @@ export default defineComponent({
       userPick,
       status,
       movesCounter,
+      shuffleCards,
+      restartGame
     }
   }
 })
