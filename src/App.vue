@@ -7,13 +7,8 @@
     <!--  ScorePanel-->
     <div class="flex items-center justify-center gap-8 py-2">
       <ul class="flex gap-1">
-        <li v-for="(image, index) in 3" :key="index">
-          <div v-if="matched">
-          <img src="../public/img/bolt" alt="streak" />
-        </div>
-        <div v-else>
-          <img src="../public/img/ghost.svg" alt="">
-        </div>
+        <li v-for="(image, index) in streakCounter" :key="index">
+          <img :src="`../public/img/${image}`" alt="streak" />
         </li>
       </ul>
       <p>{{ formattedTime }}</p>
@@ -72,7 +67,7 @@ export default defineComponent({
         seconds.toString().padStart(2, "0")
       ].join(":");
     })
-    
+    const streakCounter = ref<string[]>(['astronaut.svg', 'astronaut.svg', 'astronaut.svg'])
     const winCondition = computed(() => {
       if (remainingPicks.value === 0) {
         stopTimer()
@@ -161,11 +156,13 @@ export default defineComponent({
 
           cardList.value[firstPick.position].matched = true;
           cardList.value[secondPick.position].matched = true;
+          streakCounter.value = ['astronaut.svg', ...streakCounter.value.slice(0, -1)]
         } else {
           setTimeout(() => {
             cardList.value[firstPick.position].visible = false;
             cardList.value[secondPick.position].visible = false;
           }, 800);
+          streakCounter.value = ['moon.svg', ...streakCounter.value.slice(0, -1)]
         }
         movesCounter.value++;
         userPick.value.length = 0
@@ -189,6 +186,7 @@ export default defineComponent({
           visible: false,
         }
       })
+      streakCounter.value = ['astronaut.svg', 'astronaut.svg', 'astronaut.svg']
     }
 
     return {
@@ -199,7 +197,8 @@ export default defineComponent({
       movesCounter,
       shuffleCards,
       restartGame,
-      formattedTime
+      formattedTime,
+      streakCounter
     }
   }
 })
