@@ -1,38 +1,39 @@
 
 <template>
-  <div class="app bg-[url('../public/img/geometry2.png')] container">
+  <!-- Header + background -->
+  <div class="app bg-[url('/img/geometry2.png')] container">
     <h1 class="py-4 text-4xl font-normal text-center"> Matching Game </h1>
-    <!-- <div class="flex items-center justify-center gap-8 py-2">
+    <h2 class="text-center">{{ winCondition }}</h2>
+    <!--  ScorePanel-->
+    <div class="flex items-center justify-center gap-8 py-2">
       <ul class="flex gap-1">
         <li>#</li>
         <li>#</li>
         <li>#</li>
       </ul>
-      <p>{{ timeElapsed }}</p>
+      <p>{{ formattedTime }}</p>
       <p> No.Moves: {{ movesCounter }} </p>
       <button @click="restartGame">
-        <img src="../public/img/restart.svg" alt="restart-icon">
+        <img src="../../public/img/restart.svg" alt="restart-icon">
       </button>
-    </div> -->
-    <ScorePanel :restartGame="restartGame" />
-    <!--<h2>{{ status }}</h2> TRIGGERS when i win, i will use to change page -->
-    <section class="grid w-3/6 grid-cols-4 gap-6 p-10 mx-auto rounded-lg bg-gradient-to-br from-teal-300 to-violet-400 ">
+    </div>
+    <!-- Deck -->
+    <div
+      class="container m-auto rounded-lg md:grid lg:grid lg:grid-cols-4 md:grid-cols-1 lg:gap-6 lg:p-10 lg:w-3/6 bg-gradient-to-br from-teal-300 to-violet-400">
       <Card v-for="(card, index) in cardList" :key="`card-${index}`" :matched="card.matched" :value="card.value"
         :visible="card.visible" :position="card.position" @select-card="flipCard" />
       <!-- when @select-card (emmit) is called then it starts the flipCard function -->
-    </section>
-
+    </div>
   </div>
 </template>
 
 <script script lang="ts">
-import { defineComponent, ref, watch, computed, provide } from 'vue'
+//imports
+import { defineComponent, ref, watch, computed } from 'vue'
 import _ from 'lodash';
 import Card from './components/Card.vue';
-import ScorePanel from './components/ScorePanel.vue'
 
-
-
+//interfaces
 interface Card {
   value: string;
   visible: boolean;
@@ -48,45 +49,35 @@ export default defineComponent({
   name: 'App',
   components: {
     Card,
-    ScorePanel
+
   },
   setup() {
-    const cardList = ref<Card[]>([]) //type card and all his values
+    const cardList = ref<Card[]>([])
     const userPick = ref<Payload[]>([])
     const movesCounter = ref<number>(0)
     const timeElapsed = ref<number>(0)
-    const status = computed(() => {
-      //win condition
+    let intervalId: number | undefined
+    const formattedTime = computed(() => {
+      //https://sabe.io/blog/javascript-convert-milliseconds-seconds-minutes-hours#formatting-the-time 
+      const seconds = timeElapsed.value % 60
+      const minutes = Math.floor((timeElapsed.value % 3600) / 60)
+      const hours = Math.floor(timeElapsed.value / 3600)
+      return [
+        hours.toString().padStart(2, "0"),
+        minutes.toString().padStart(2, "0"),
+        seconds.toString().padStart(2, "0")
+      ].join(":");
+    })
+
+    const winCondition = computed(() => {
       if (remainingPicks.value === 0) {
-        return "You won"
+        stopTimer()
+        return ("You won 🫰" + "Tempo impiegato: " + formattedTime.value)
       }
       return "";
     })
-    const remainingPicks = computed(() => {
-      const remainingCards = cardList.value.filter(
-        card => card.matched === false).length
 
-      return remainingCards / 2
-    })
-
-    const shuffleCards = () => {
-      cardList.value = _.shuffle(cardList.value);
-    }
-
-    const restartGame = () => {
-      shuffleCards();
-      movesCounter.value = 0;
-      cardList.value = cardList.value.map((card, index) => {
-        return {
-          ...card,
-          matched: false,
-          position: index,
-          visible: false,
-
-        }
-      })
-    }
-
+    /* ############ Deck Builder ############ */
     const cardItems = ['globe', 'binoculars', 'moon', 'astronaut', 'shuttle', 'antenna', 'satellite', 'meteor'];
 
     cardItems.forEach((item, index) => {
@@ -113,6 +104,34 @@ export default defineComponent({
       }
     })
 
+    const remainingPicks = computed(() => {
+      const remainingCards = cardList.value.filter(
+        card => card.matched === false).length
+      return remainingCards / 2
+    })
+
+    /* ############ Timer functions ############ */
+
+    const startTimer = () => {
+      intervalId = setInterval(() => {
+        timeElapsed.value++
+      }, 1000)
+    }
+    startTimer()
+    const stopTimer = () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+        intervalId = undefined
+      } return timeElapsed.value
+    }
+    const restartTimer = () => {
+      clearInterval(intervalId)
+      timeElapsed.value = 0
+      startTimer()
+    }
+
+
+    /* ############ Card functions ############ */
     const flipCard = (payload: Payload) => {
       cardList.value[payload.position].visible = true
 
@@ -128,6 +147,7 @@ export default defineComponent({
         userPick.value[0] = payload
       }
     }
+
     watch(userPick, currentValue => {
       if (currentValue.length === 2) {
         const firstPick = currentValue[0];
@@ -139,27 +159,44 @@ export default defineComponent({
           cardList.value[secondPick.position].matched = true;
         } else {
           setTimeout(() => {
-
             cardList.value[firstPick.position].visible = false;
             cardList.value[secondPick.position].visible = false;
           }, 1000);
         }
         movesCounter.value++;
         userPick.value.length = 0
+
       }
 
     }, { deep: true })
-    provide('movesCounter', movesCounter)
+
+    const shuffleCards = () => {
+      cardList.value = _.shuffle(cardList.value);
+    }
+    const restartGame = () => {
+      shuffleCards();
+      restartTimer();
+      movesCounter.value = 0;
+      cardList.value = cardList.value.map((card, index) => {
+        return {
+          ...card,
+          matched: false,
+          position: index,
+          visible: false,
+        }
+      })
+    }
+
 
     return {
       cardList,
       flipCard,
       userPick,
-      status,
+      winCondition,
       movesCounter,
       shuffleCards,
       restartGame,
-      timeElapsed
+      formattedTime
     }
   }
 })
