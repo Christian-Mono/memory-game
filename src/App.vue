@@ -7,14 +7,19 @@
     <!--  ScorePanel-->
     <div class="flex items-center justify-center gap-8 py-2">
       <ul class="flex gap-1">
-        <li>#</li>
-        <li>#</li>
-        <li>#</li>
+        <li v-for="(image, index) in 3" :key="index">
+          <div v-if="matched">
+          <img src="../public/img/bolt" alt="streak" />
+        </div>
+        <div v-else>
+          <img src="../public/img/ghost.svg" alt="">
+        </div>
+        </li>
       </ul>
       <p>{{ formattedTime }}</p>
       <p> No.Moves: {{ movesCounter }} </p>
       <button @click="restartGame">
-        <img src="../../public/img/restart.svg" alt="restart-icon">
+        <img src="/img/restart.svg" alt="restart-icon">
       </button>
     </div>
     <!-- Deck -->
@@ -49,7 +54,6 @@ export default defineComponent({
   name: 'App',
   components: {
     Card,
-
   },
   setup() {
     const cardList = ref<Card[]>([])
@@ -68,7 +72,7 @@ export default defineComponent({
         seconds.toString().padStart(2, "0")
       ].join(":");
     })
-
+    
     const winCondition = computed(() => {
       if (remainingPicks.value === 0) {
         stopTimer()
@@ -76,6 +80,7 @@ export default defineComponent({
       }
       return "";
     })
+
 
     /* ############ Deck Builder ############ */
     const cardItems = ['globe', 'binoculars', 'moon', 'astronaut', 'shuttle', 'antenna', 'satellite', 'meteor'];
@@ -111,7 +116,6 @@ export default defineComponent({
     })
 
     /* ############ Timer functions ############ */
-
     const startTimer = () => {
       intervalId = setInterval(() => {
         timeElapsed.value++
@@ -161,7 +165,7 @@ export default defineComponent({
           setTimeout(() => {
             cardList.value[firstPick.position].visible = false;
             cardList.value[secondPick.position].visible = false;
-          }, 1000);
+          }, 800);
         }
         movesCounter.value++;
         userPick.value.length = 0
@@ -186,7 +190,6 @@ export default defineComponent({
         }
       })
     }
-
 
     return {
       cardList,
