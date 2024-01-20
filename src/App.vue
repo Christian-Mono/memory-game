@@ -1,28 +1,31 @@
 
 <template>
-  <!-- Header + background -->
-  <div class="app bg-[url('/img/geometry2.png')] container">
-    <h1 class="py-4 text-4xl font-normal text-center"> Matching Game </h1>
-    <h2 class="text-center">{{ winCondition }}</h2>
-    <!--  ScorePanel-->
-    <div class="flex items-center justify-center gap-8 py-2">
-      <ul class="flex gap-1">
-        <li v-for="(image, index) in streakCounter" :key="index">
-          <img :src="`../public/img/${image}`" alt="streak" />
-        </li>
-      </ul>
-      <p>{{ formattedTime }}</p>
-      <p> No.Moves: {{ movesCounter }} </p>
-      <button @click="restartGame">
-        <img src="/img/restart.svg" alt="restart-icon">
-      </button>
-    </div>
-    <!-- Deck -->
-    <div
-      class="container m-auto rounded-lg md:grid lg:grid lg:grid-cols-4 md:grid-cols-1 lg:gap-6 lg:p-10 lg:w-3/6 bg-gradient-to-br from-teal-300 to-violet-400">
-      <Card v-for="(card, index) in cardList" :key="`card-${index}`" :matched="card.matched" :value="card.value"
-        :visible="card.visible" :position="card.position" @select-card="flipCard" />
-      <!-- when @select-card (emmit) is called then it starts the flipCard function -->
+  <div>
+    <!-- background + victory screen -->
+    <WinScreen v-if="winCondition" :message="winCondition" :restartGame="restartGame" />
+    <!-- Header + BG -->
+    <div v-else class="app bg-[url('/img/geometry2.png')] container pb-8">
+      <h1 class="py-4 text-4xl font-normal text-center"> Matching Game </h1>
+      <!--  ScorePanel-->
+      <div class="flex items-center justify-center gap-8 py-2">
+        <ul class="flex gap-1">
+          <li v-for="(image, index) in streakCounter" :key="index">
+            <img :src="`../public/img/${image}`" alt="streak" />
+          </li>
+        </ul>
+        <p>{{ formattedTime }}</p>
+        <p> No.Moves: {{ movesCounter }} </p>
+        <button @click="restartGame">
+          <img src="/img/restart.svg" alt="restart-icon">
+        </button>
+      </div>
+      <!-- Deck -->
+      <div
+        class="container m-auto rounded-lg md:grid lg:grid lg:grid-cols-4 md:grid-cols-1 lg:gap-6 lg:p-10 lg:w-3/6 bg-gradient-to-br from-teal-300 to-violet-400">
+        <Card v-for="(card, index) in cardList" :key="`card-${index}`" :matched="card.matched" :value="card.value"
+          :visible="card.visible" :position="card.position" @select-card="flipCard" />
+        <!-- when @select-card (emmit) is called then it starts the flipCard function -->
+      </div>
     </div>
   </div>
 </template>
@@ -32,6 +35,7 @@
 import { defineComponent, ref, watch, computed } from 'vue'
 import _ from 'lodash';
 import Card from './components/Card.vue';
+import WinScreen from './components/WinScreen.vue'
 
 //interfaces
 interface Card {
@@ -44,11 +48,13 @@ interface Payload {
   cardValue: number;
   position: number;
 }
+interface WinScreen { }
 
 export default defineComponent({
   name: 'App',
   components: {
     Card,
+    WinScreen
   },
   setup() {
     const cardList = ref<Card[]>([])
@@ -67,14 +73,16 @@ export default defineComponent({
         seconds.toString().padStart(2, "0")
       ].join(":");
     })
-    const streakCounter = ref<string[]>(['astronaut.svg', 'astronaut.svg', 'astronaut.svg'])
+    const streakCounter = ref<string[]>(['sun-streak.svg', 'sun-streak.svg', 'sun-streak.svg'])
     const winCondition = computed(() => {
       if (remainingPicks.value === 0) {
         stopTimer()
-        return ("You won 🫰" + "Tempo impiegato: " + formattedTime.value)
+
+        return ("You won in " + formattedTime.value + " using " + movesCounter.value + " moves, for " + streakCounter.value.length + " suns")
       }
       return "";
     })
+
 
 
     /* ############ Deck Builder ############ */
@@ -116,7 +124,7 @@ export default defineComponent({
         timeElapsed.value++
       }, 1000)
     }
-    startTimer()
+
     const stopTimer = () => {
       if (intervalId) {
         clearInterval(intervalId)
@@ -129,9 +137,12 @@ export default defineComponent({
       startTimer()
     }
 
-
     /* ############ Card functions ############ */
     const flipCard = (payload: Payload) => {
+      /* check for already matched cards */
+      if (cardList.value[payload.position].matched) {
+        return;
+      }
       cardList.value[payload.position].visible = true
 
       if (userPick.value[0]) {
@@ -156,13 +167,13 @@ export default defineComponent({
 
           cardList.value[firstPick.position].matched = true;
           cardList.value[secondPick.position].matched = true;
-          streakCounter.value = ['astronaut.svg', ...streakCounter.value.slice(0, -1)]
+          streakCounter.value = ['sun-streak.svg', ...streakCounter.value.slice(0, -1)]
         } else {
           setTimeout(() => {
             cardList.value[firstPick.position].visible = false;
             cardList.value[secondPick.position].visible = false;
           }, 800);
-          streakCounter.value = ['moon.svg', ...streakCounter.value.slice(0, -1)]
+          streakCounter.value = [...streakCounter.value.slice(1), 'sun-loss.svg']
         }
         movesCounter.value++;
         userPick.value.length = 0
@@ -174,6 +185,7 @@ export default defineComponent({
     const shuffleCards = () => {
       cardList.value = _.shuffle(cardList.value);
     }
+
     const restartGame = () => {
       shuffleCards();
       restartTimer();
@@ -186,8 +198,12 @@ export default defineComponent({
           visible: false,
         }
       })
-      streakCounter.value = ['astronaut.svg', 'astronaut.svg', 'astronaut.svg']
+      streakCounter.value = ['sun-streak.svg', 'sun-streak.svg', 'sun-streak.svg']
     }
+    /*Game start */
+    startTimer()
+    restartGame()
+
 
     return {
       cardList,
