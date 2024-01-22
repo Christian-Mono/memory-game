@@ -23,7 +23,7 @@
       <div
         class="grid grid-cols-4 gap-4 p-4 mx-auto rounded-lg shadow-2xl shadow-slate-700 w-96 h-96 xl:w-[40rem] xl:h-[40rem] xl:p-8 xl:gap-8 opacity-95 bg-gradient-to-b from-teal-300 to-violet-400">
         <Card v-for="(card, index) in cardList" :key="`card-${index}`" :matched="card.matched" :value="card.value"
-          :visible="card.visible" :position="card.position" @select-card="flipCard" />
+          :visible="card.visible" :cardIndex="card.cardIndex" @select-card="flipCard" />
         <!-- when @select-card (emmit) is called then it starts the flipCard function -->
       </div>
     </div>
@@ -41,12 +41,12 @@ import WinScreen from './components/WinScreen.vue'
 interface Card {
   value: string;
   visible: boolean;
-  position: number;
+  cardIndex: number;
   matched: boolean;
 }
 interface Payload {
   cardValue: number;
-  position: number;
+  cardIndex: number;
 }
 interface WinScreen { }
 
@@ -93,14 +93,14 @@ export default defineComponent({
       cardList.value.push({
         value: item,
         visible: false,
-        position: index,
+        cardIndex: index,
         matched: false
       })
 
       cardList.value.push({
         value: item,
         visible: false,
-        position: index,
+        cardIndex: index,
         matched: false
       })
 
@@ -109,7 +109,7 @@ export default defineComponent({
     cardList.value = cardList.value.map((card, index) => {
       return {
         ...card,
-        position: index
+        cardIndex: index
       }
     })
 
@@ -141,15 +141,15 @@ export default defineComponent({
     let canFlip = true;
     /* ############ Card functions ############ */
     const flipCard = (payload: Payload) => {
-      /* check for already matched cards */
-      if (cardList.value[payload.position].matched || !canFlip) {
+      /* check for already matched cards by index */
+      if (cardList.value[payload.cardIndex].matched || !canFlip) {
         return;
       }
-      cardList.value[payload.position].visible = true
+      cardList.value[payload.cardIndex].visible = true
 
       if (userPick.value[0]) {
         if (
-          userPick.value[0].position === payload.position && userPick.value[0].cardValue === payload.cardValue
+          userPick.value[0].cardIndex === payload.cardIndex && userPick.value[0].cardValue === payload.cardValue
         ) {
           return
         } else {
@@ -171,14 +171,18 @@ export default defineComponent({
         const secondPick = currentValue[1];
 
         if (firstPick.cardValue === secondPick.cardValue) {
-          cardList.value[firstPick.position].matched = true;
-          cardList.value[secondPick.position].matched = true;
+          /* cardIndex used to find paired cards in the array cardList.value */
+          cardList.value[firstPick.cardIndex].matched = true;
+          cardList.value[secondPick.cardIndex].matched = true;
+
+          console.log(firstPick.cardIndex)
+          console.log(secondPick.cardIndex)
           streakCounter.value = ['streak.svg', ...streakCounter.value.slice(0, -1)]
           finalStreak.value++;
         } else {
           setTimeout(() => {
-            cardList.value[firstPick.position].visible = false;
-            cardList.value[secondPick.position].visible = false;
+            cardList.value[firstPick.cardIndex].visible = false;
+            cardList.value[secondPick.cardIndex].visible = false;
           }, 800);
           streakCounter.value = [...streakCounter.value.slice(1), 'fail.svg']
           finalStreak.value = 0;
@@ -203,7 +207,7 @@ export default defineComponent({
         return {
           ...card,
           matched: false,
-          position: index,
+          cardIndex: index,
           visible: false,
         }
       })
