@@ -10,7 +10,7 @@
       <div class="flex justify-center gap-8 p-4 sm:items-center">
         <ul class="flex gap-1">
           <li v-for="(image, index) in streakCounter" :key="index">
-            <img :src="`../public/img/${image}`" alt="streak" />
+            <img :src="`/img/${image}`" alt="streakValue" />
           </li>
         </ul>
         <p>{{ formattedTime }}</p>
