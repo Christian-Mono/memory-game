@@ -4,7 +4,7 @@
     <!-- background + victory screen -->
     <WinScreen v-if="winCondition" :message="winCondition" :restartGame="restartGame" />
     <!-- Header + BG -->
-    <div v-else class="app bg-[url('/img/geometry2.png')] h-screen w-full ">
+    <div v-else class="app bg-[url('/img/geometry2.png')] h-[100%] w-[100%] pb-11 ">
       <h1 class="py-4 text-2xl font-normal text-center xl:text-4xl"> Matching Game </h1>
       <!--  ScorePanel-->
       <div class="flex items-center justify-center gap-4 p-2 sm:gap-8 sm:p-4">
