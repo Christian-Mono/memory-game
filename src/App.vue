@@ -4,10 +4,10 @@
     <!-- background + victory screen -->
     <WinScreen v-if="winCondition" :message="winCondition" :restartGame="restartGame" />
     <!-- Header + BG -->
-    <div v-else class="app bg-[url('/img/geometry2.png')] container pb-8">
-      <h1 class="py-4 text-4xl font-normal text-center"> Matching Game </h1>
+    <div v-else class="app bg-[url('/img/geometry2.png')] h-full w-full pb-2 ">
+      <h1 class="py-4 text-2xl font-normal text-center xl:text-4xl"> Matching Game </h1>
       <!--  ScorePanel-->
-      <div class="flex items-center justify-center gap-8 py-2">
+      <div class="flex justify-center gap-8 p-4 sm:items-center">
         <ul class="flex gap-1">
           <li v-for="(image, index) in streakCounter" :key="index">
             <img :src="`../public/img/${image}`" alt="streak" />
@@ -21,7 +21,7 @@
       </div>
       <!-- Deck -->
       <div
-        class="container m-auto rounded-lg md:grid lg:grid lg:grid-cols-4 md:grid-cols-1 lg:gap-6 lg:p-10 lg:w-3/6 bg-gradient-to-br from-teal-300 to-violet-400">
+        class="grid grid-cols-4 gap-4 p-4 mx-auto rounded-lg shadow-2xl shadow-slate-700 w-96 h-96 xl:w-[40rem] xl:h-[40rem] xl:p-8 xl:gap-8 opacity-95 bg-gradient-to-b from-teal-300 to-violet-400">
         <Card v-for="(card, index) in cardList" :key="`card-${index}`" :matched="card.matched" :value="card.value"
           :visible="card.visible" :position="card.position" @select-card="flipCard" />
         <!-- when @select-card (emmit) is called then it starts the flipCard function -->
@@ -73,12 +73,13 @@ export default defineComponent({
         seconds.toString().padStart(2, "0")
       ].join(":");
     })
-    const streakCounter = ref<string[]>(['sun-streak.svg', 'sun-streak.svg', 'sun-streak.svg'])
+    const finalStreak = ref<number>(0)
+    const streakCounter = ref<string[]>(['streak.svg', 'streak.svg', 'streak.svg'])
     const winCondition = computed(() => {
       if (remainingPicks.value === 0) {
         stopTimer()
 
-        return ("You won in " + formattedTime.value + " using " + movesCounter.value + " moves, for " + streakCounter.value.length + " suns")
+        return ("You won in " + formattedTime.value + " using " + movesCounter.value + " moves, with a streak of " + finalStreak.value)
       }
       return "";
     })
@@ -137,10 +138,11 @@ export default defineComponent({
       startTimer()
     }
 
+    let canFlip = true;
     /* ############ Card functions ############ */
     const flipCard = (payload: Payload) => {
       /* check for already matched cards */
-      if (cardList.value[payload.position].matched) {
+      if (cardList.value[payload.position].matched || !canFlip) {
         return;
       }
       cardList.value[payload.position].visible = true
@@ -152,6 +154,10 @@ export default defineComponent({
           return
         } else {
           userPick.value[1] = payload
+          canFlip = false;
+          setTimeout(() => {
+            canFlip = true;
+          }, 800);
         }
       } else {
         userPick.value[0] = payload
@@ -159,26 +165,29 @@ export default defineComponent({
     }
 
     watch(userPick, currentValue => {
+
       if (currentValue.length === 2) {
         const firstPick = currentValue[0];
         const secondPick = currentValue[1];
 
         if (firstPick.cardValue === secondPick.cardValue) {
-
           cardList.value[firstPick.position].matched = true;
           cardList.value[secondPick.position].matched = true;
-          streakCounter.value = ['sun-streak.svg', ...streakCounter.value.slice(0, -1)]
+          streakCounter.value = ['streak.svg', ...streakCounter.value.slice(0, -1)]
+          finalStreak.value++;
         } else {
           setTimeout(() => {
             cardList.value[firstPick.position].visible = false;
             cardList.value[secondPick.position].visible = false;
           }, 800);
-          streakCounter.value = [...streakCounter.value.slice(1), 'sun-loss.svg']
+          streakCounter.value = [...streakCounter.value.slice(1), 'fail.svg']
+          finalStreak.value = 0;
         }
         movesCounter.value++;
         userPick.value.length = 0
 
       }
+
 
     }, { deep: true })
 
@@ -198,12 +207,12 @@ export default defineComponent({
           visible: false,
         }
       })
-      streakCounter.value = ['sun-streak.svg', 'sun-streak.svg', 'sun-streak.svg']
+      streakCounter.value = ['streak.svg', 'streak.svg', 'streak.svg']
     }
     /*Game start */
     startTimer()
+    /*    restartGame() */
     restartGame()
-
 
     return {
       cardList,
